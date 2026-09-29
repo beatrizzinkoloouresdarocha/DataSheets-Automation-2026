@@ -258,7 +258,7 @@ cats = Reference(ws, min_col=1, min_row=4, max_row=linha_atual - 1)
 chart.add_data(data, titles_from_data=True)
 chart.set_categories(cats)
 
-ws.add_chart(chart, "E3")
+ws.add_chart(chart, "E3") # type: ignore
 
 # ==============================================================================
 # 5. SALVAR O ARQUIVO FINAL
