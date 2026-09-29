@@ -2,14 +2,13 @@ import pandas as pd
 from openpyxl import Workbook
 from openpyxl.chart import BarChart, Reference
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
-from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.worksheet import Worksheet
 
 # ==============================================================================
 # 1. CONFIGURAÇÃO DA URL DO GOOGLE PLANILHAS
-# Cole abaixo o link publicado na web no formato CSV (.csv)
+# Link de exportação direta CSV da sua planilha
 # ==============================================================================
-URL_SHEET_CSV = "SUA_URL_PUBLICADA_AQUI"
+URL_SHEET_CSV = "https://docs.google.com/spreadsheets/d/1a7odnKOYZziF_kIBnTIme0oGeCzkmFL1B3rmUclEWKA/export?format=csv"
 
 print("Baixando e processando dados do Google Planilhas...")
 
@@ -260,11 +259,6 @@ chart.add_data(data, titles_from_data=True)
 chart.set_categories(cats)
 
 ws.add_chart(chart, "E3")
-
-# Validação de dados usando a string da célula
-dv = DataValidation(type="list", formula1='"Opção 1, Opção 2"')
-ws.add_data_validation(dv)
-dv.add("A1")
 
 # ==============================================================================
 # 5. SALVAR O ARQUIVO FINAL
