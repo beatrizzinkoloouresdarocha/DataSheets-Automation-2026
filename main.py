@@ -2,6 +2,7 @@ import pandas as pd
 from openpyxl import Workbook
 from openpyxl.chart import BarChart, Reference
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.worksheet.worksheet import Worksheet
 
 # ==============================================================================
@@ -139,19 +140,13 @@ except (ValueError, OSError, RuntimeError) as e:
 # ==============================================================================
 # 2. PROCESSAMENTO E ANÁLISE DOS DADOS
 # ==============================================================================
-# Trata a conversão numérica e preenche valores nulos sem conflito de tipos
-df["Vendas"] = pd.to_numeric(df["Vendas"], errors="coerce")
-df["Vendas"] = df["Vendas"].fillna(0)
+df["Vendas"] = pd.to_numeric(df["Vendas"], errors="coerce").fillna(0)
+df["Quantidade"] = pd.to_numeric(df["Quantidade"], errors="coerce").fillna(0)
 
-df["Quantidade"] = pd.to_numeric(df["Quantidade"], errors="coerce")
-df["Quantidade"] = df["Quantidade"].fillna(0)
-
-# Resumo agrupado por Categoria
 resumo_categoria = (
     df.groupby("Categoria")[["Quantidade", "Vendas"]].sum().reset_index()
 )
 
-# Totalizador geral
 total_vendas = float(df["Vendas"].sum())
 total_qtd = int(df["Quantidade"].sum())
 
@@ -160,14 +155,12 @@ total_qtd = int(df["Quantidade"].sum())
 # ==============================================================================
 wb = Workbook()
 
-# Garantia de tipo explícita para o analisador estático
 ws = wb.active
 assert isinstance(ws, Worksheet)
 
 ws.title = "Resumo Executivo"
 ws.views.sheetView[0].showGridLines = True
 
-# Definição de Cores e Estilos
 COR_CABECALHO_PRINCIPAL = "1F4E79"
 COR_CABECALHO_TABELA = "2F5597"
 COR_LINHA_TOTAL = "D9E1F2"
@@ -192,7 +185,6 @@ border_cell = Border(
 )
 border_total = Border(top=borda_fina, bottom=borda_dupla)
 
-# Banner de Título Superior
 ws.merge_cells("A1:C1")
 cell_a1 = ws["A1"]
 assert cell_a1 is not None
@@ -202,7 +194,6 @@ cell_a1.fill = fill_titulo
 cell_a1.alignment = Alignment(horizontal="center", vertical="center")
 ws.row_dimensions[1].height = 40
 
-# Tabela de Resumo por Categoria
 headers = ["Categoria", "Quantidade Total", "Total Vendas (R$)"]
 for col_num, header in enumerate(headers, start=1):
     cell = ws.cell(row=3, column=col_num, value=header)
@@ -230,7 +221,6 @@ for _, row in resumo_categoria.iterrows():
         c.border = border_cell
     linha_atual += 1
 
-# Linha de Totais Gerais
 c1_tot = ws.cell(row=linha_atual, column=1, value="TOTAL GERAL")
 c2_tot = ws.cell(row=linha_atual, column=2, value=total_qtd)
 c3_tot = ws.cell(row=linha_atual, column=3, value=total_vendas)
@@ -247,7 +237,6 @@ for c in (c1_tot, c2_tot, c3_tot):
     c.fill = fill_total
     c.border = border_total
 
-# Larguras das Colunas
 ws.column_dimensions["A"].width = 22
 ws.column_dimensions["B"].width = 20
 ws.column_dimensions["C"].width = 22
@@ -270,8 +259,12 @@ cats = Reference(ws, min_col=1, min_row=4, max_row=linha_atual - 1)
 chart.add_data(data, titles_from_data=True)
 chart.set_categories(cats)
 
-# Posiciona o gráfico na célula E3 com o nome explícito de parâmetro 'cell'
-ws.add_chart(chart, cell="E3")
+ws.add_chart(chart, "E3")
+
+# Validação de dados usando a string da célula
+dv = DataValidation(type="list", formula1='"Opção 1, Opção 2"')
+ws.add_data_validation(dv)
+dv.add("A1")
 
 # ==============================================================================
 # 5. SALVAR O ARQUIVO FINAL
